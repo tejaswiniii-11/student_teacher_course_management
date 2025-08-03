@@ -51,17 +51,22 @@ public class FeeDao {
 	
 	public void feeByStudentId(int studentId) {
 		if(!checkIfStudentExist(studentId)) {
-			System.out.println("XXX Wrong student id. XXX");
+			System.out.println("XXXXX Wrong student id. XXXXX");
 			return;
 		}
 		
 		try {
 			statement = getStatement();
-			resultSet = statement.executeQuery("select * from student_fees where student_id = " + studentId);
+			resultSet = statement.executeQuery(
+					"select sf.student_id, CONCAT(student_fname,' ',student_lname) as Name, "
+					+ " sf.paid_fee, sf.pending_fee, sf.total_fee from student_fees sf "
+					+ " join students s on s.student_id = sf.student_id"
+					+ " where s.student_id = " + studentId
+					);
+			System.out.printf("\n\n%-10s | %-25s | %-10s | %-15s | %-10s\n","Student ID","Name","Paid fee","Pending fee","Total fee");
 			
 			while(resultSet.next()) {
-				System.out.println(resultSet.getInt(1)+"\t"+resultSet.getDouble(2) + "\t" + resultSet.getDouble(3) + "\t" +
-									resultSet.getDouble(4));
+				System.out.printf("%-10s | %-25s | %-10s | %-15s | %-10s\n",resultSet.getInt(1), resultSet.getString(2), resultSet.getDouble(3), resultSet.getDouble(4),resultSet.getDouble(5));
 			}
 			
 		} catch (SQLException e) {
@@ -81,7 +86,7 @@ public class FeeDao {
 			statement = getStatement();
 			resultSet = statement.executeQuery("select * from courses where course_id = "+courseId);
 			while(resultSet.next()) {
-				System.out.println(resultSet.getInt(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getDouble(3));
+				System.out.println(resultSet.getInt(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getBoolean(3) +"\t"+resultSet.getDouble(4));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -108,13 +113,22 @@ public class FeeDao {
 	public void paidFees() {
 		try {
 			statement = connection.createStatement();
-			String query = "select s.student_id as ID, CONCAT(student_fname,' ',student_lname) as Name, sf.paid_fee as paid fee from student_fees sf "
+			String query = "select s.student_id as ID, CONCAT(student_fname,' ',student_lname) as Name, sf.paid_fee as paidFee from student_fees sf "
 					+ "join students s "
-					+ "on s.student_id = sf.student_id and pending_fee = ";
-			resultSet = statement.executeQuery(query + 0);
-			while(resultSet.next()) {
-				System.out.println(resultSet.getInt(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getDouble(3));
+					+ "on s.student_id = sf.student_id and sf.pending_fee = 0.00";
+			resultSet = statement.executeQuery(query);
+			if(resultSet.next()) {
+				System.out.println("\n");
+				System.out.printf("%-10s %-20s %-10s\n", "Student Id","Name","Paid Fee");
+				System.out.printf("%-10s %-20s %-10s\n",resultSet.getInt(1),resultSet.getString(2),resultSet.getDouble(3));
+				while(resultSet.next()) {
+					System.out.printf("%-10s %-20s %-10s\n",resultSet.getInt(1),resultSet.getString(2),resultSet.getDouble(3));
+				}
 			}
+			else {
+				System.out.println("\n***** Not a single student has paid there full fees. *****");
+			}
+			
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -123,12 +137,21 @@ public class FeeDao {
 	public void pendingFees() {
 		try {
 			statement = connection.createStatement();
-			String query = "select s.student_id as ID, CONCAT(student_fname,' ',student_lname) as Name, sf.pending_fee as pending fee from student_fees sf "
-					+ "join students s "
-					+ "on s.student_id = sf.student_id and pending_fee > ";
-			resultSet = statement.executeQuery(query + 0);
-			while(resultSet.next()) {
-				System.out.println(resultSet.getInt(1) + "\t" + resultSet.getString(2) + "\t" + resultSet.getDouble(3));
+			String query = "select s.student_id as ID, CONCAT(student_fname,' ',student_lname) as Name,"
+					+ " sf.pending_fee as pendingFee from student_fees sf "
+					+ " join students s "
+					+ " on s.student_id = sf.student_id and sf.pending_fee > 0.00 ";
+			resultSet = statement.executeQuery(query);
+			if(resultSet.next()) {
+				System.out.println("\n");
+				System.out.printf("%-10s %-30s %-10s\n", "Student Id","Name","Pending Fee");
+				System.out.printf("%-10s %-30s %-10s\n",resultSet.getInt(1),resultSet.getString(2),resultSet.getDouble(3));
+				while(resultSet.next()) {
+					System.out.printf("%-10s %-30s %-10s\n",resultSet.getInt(1),resultSet.getString(2),resultSet.getDouble(3));
+				}
+			}
+			else {
+				System.out.println("\n *** Every student has paid there fees. ***");
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();

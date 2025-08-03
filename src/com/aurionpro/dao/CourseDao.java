@@ -84,7 +84,7 @@ public class CourseDao {
 			resultSet = statement.executeQuery("select * from courses");
 			
 			System.out.printf("%-10s %-50s %-10s %-10s\n","Course ID","Course Name","Course Fee","Active");
-			
+			System.out.println("--------------------------------------------------------------------------------------------");
 			while(resultSet.next()) {
 				System.out.printf("%-10s %-50s %-10s %b\n",resultSet.getInt("course_id"),
 						resultSet.getString("course_name"),resultSet.getDouble("course_fee"),resultSet.getBoolean("is_active"));
